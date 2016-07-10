@@ -1,0 +1,50 @@
+# Functions
+
+## Golden Ratio
+
+grl(x) = round(x * ((sqrt(5) - 1) / 2))
+grh(x) = round(x * ((sqrt(5) + 1) / 2))
+grd(x) = [x - grl(x), grl(x)]
+
+## Conversions
+
+d2r(d) = (pi / 180) * d
+r2d(x) = (180 / pi) * x
+
+## Metrics
+
+m(outer, inner) = (outer - inner) / 2
+d(p1, p2) = abs(p1 - p2)
+p(p1x, p2x, p1y, p2y) = sqrt(d(p1x, p2x)^2 + d(p1y, p2y)^2)
+a(px, py) = atan(py / px) in degrees
+
+## Scaling
+
+sq = 0.8
+lq = 1.2
+
+s(x) = round(x * sq)
+l(x) = round(x * lq)
+
+# Layout
+
+bleed = 
+gutter = 
+margin = 
+width = 
+height = 
+font = 
+line = 
+
+# Fonts
+
+font smallest = 
+font smaller = 
+font small = 
+font base = font => font
+font large = 
+font larger = 
+font largest = 
+
+# Calculations
+
