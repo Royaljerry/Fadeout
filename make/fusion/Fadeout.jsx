@@ -1,35 +1,84 @@
+/*-------------------------------------------------
+Get Radio Button Value
+
+Get the selected value of a RadioButton group
+---------------------------------------------------
+:param        «NAME»       «TYPE»:           «DESC»
+---------------------------------------------------
+:return:      The value of the selected button
+:rtype:       Number
+:raises:      -
+-------------------------------------------------*/
+function getRadioValue(element)
+{
+	var r = '';
+	for (var i in element)
+	{
+		if (element[i] instanceof RadioButton)
+		{
+			r += element[i].text + "\n";
+		}
+	}
+	return(r);
+}
+
 var FadeoutOptions =
 {
-	defaults:
-	{
-		wMin: 10,
-		wMax: 100,
-		wTrans: 'linear',
-		wUnit: '%'
-	},
-
 	createDialog: function()
 	{
-		var options = "dialog { text:'Fadeout', " + 
-			"radioPanel: Panel { orientation:'column', alignment:'fill', alignChildren:'left',\
-					text: 'Control Point Options', \
-					anchorsRb: RadioButton { text:'Anchors Only (Spikey)', value:true	}, \
-					handlesRb: RadioButton { text:'Handles Only (Bulbous)'}, \
-					bothRb: RadioButton { text:'Anchors and Handles (Chaotic)' } \
-				}, \
-			stray: Group { orientation: 'row', \
-					label: StaticText { text:'Amount to stray (in points):' }, \
-					amount: EditText { text:'30', characters: 10 } \
-				}, \
-			buttons: Group { orientation: 'row', alignment:'right', \
-					cancelBtn:	 Button { text:'cancel', properties:{name:'cancel'} }, \
-					okBtn: Button { text:'organify', properties:{name:'ok'}	} \
-				} \
-			}";
-		 this.win = new Window(options);
-		 w = this.win;
-		 this.win.buttons.cancelBtn.onClick = function () {w.close(-1);};
-		 this.win.buttons.okBtn.onClick = function () {w.close(1);};
+		var options = "dialog {text: 'Fadeout', " +
+			"\
+			untsPn: Panel\
+			{\
+				orientation:        'row',\
+				alignment:          'fill',\
+				alignChildren:      'left',\
+				text:               'Unit',\
+				relRd:              RadioButton         {text: 'Relative (%)'},\
+				absRd:              RadioButton         {text: 'Absolute (px)', value: true}\
+			},\
+			trnsPn: Panel\
+			{\
+				orientation:        'row',\
+				alignment:          'fill',\
+				alignChildren:      'left',\
+				text:               'Transition',\
+				linRd:              RadioButton         {text: 'Linear', value:true},\
+				cubRd:              RadioButton         {text: 'Cubic'},\
+				logRd:              RadioButton         {text: 'Logarithmic'}\
+			},\
+			valsPn: Panel\
+			{\
+				orientation:        'row',\
+				alignment:          'fill',\
+				alignChildren:      'left',\
+				text:               'Values', \
+				vmnGr:               Group\
+				{\
+					orientation:    'row',\
+					label:          StaticText          {text:'Minimum:'},\
+					vmnTx:          EditText            {text:'10', characters: 3}\
+				},\
+				vmxGr:               Group\
+				{\
+					orientation:    'row',\
+					label:          StaticText          {text:'Maximum:'},\
+					vmxTx:          EditText            {text:'10', characters: 3}\
+				}\
+			},\
+			buttons: Group\
+			{\
+				orientation:        'row',\
+				alignment:          'right',\
+				cncBt:              Button             {text: 'Cancel', properties: {name: 'cancel'}},\
+				fdtBt:              Button             {text: 'OK', properties: {name: 'ok'}}\
+			}\
+		}";
+
+		this.win = new Window(options);
+		var w = this.win;
+		this.win.buttons.cncBt.onClick = function () {w.close(-1);};
+		this.win.buttons.fdtBt.onClick = function () {w.close(1);};
 	},
 
 	getUserOptions: function()
@@ -42,7 +91,8 @@ var FadeoutOptions =
 
 	getWindowOptions: function()
 	{
-		// ToDo
+		var v = getRadioValue(this.win.untsPn);
+		alert("FINALLY\n\n" + v);
 	}
 }
 
