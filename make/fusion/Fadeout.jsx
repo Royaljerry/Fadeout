@@ -115,32 +115,38 @@ Loop thru' all paths and its descendants and modify their values
 function setPaths(paths, origin, options)
 {
 	var o = getMetrics(paths);
-	var m = getFurthest(paths, origin);
 	// alert("Longest distance: " + m);
 	// alert("Origin:\n\n" + o.ox + ", " + o.oy);
-	var p1 = {x: o.ox, y: o.oy};
-	var mn = options.valsMin;
-	var mx = options.valsMax;
-	var uSR = (mx - mn) / m;
+	var co = {x: o.ox, y: o.oy};
+	var absDist = getFurthest(paths, origin);
+	var usrMin = options.valsMin;
+	var usrMax = options.valsMax;
+	var usrDist = usrMax - usrMin;
 	for(var i in paths)
 	{
 		var cPath = paths[i];
-		var p = getCenter(cPath);
-		var p2 = {x: p.px, y: p.py};
-		var d = getDistance(p1, p2);
+		var cPathC = getCenter(cPath);
+		var cp = {x: cPathC.px, y: cPathC.py};
+		var curDist = getDistance(co, cp);
+		var absRat = curDist / absDist;
+		var usrRat = usrMin + (curDist / usrDist);
+		var usrRat = 1 - ((usrMin / 100) + ((absRat * usrDist) / 100));
 		var s = cPath.strokeWidth;
-		var rAbs = (100 / m) * d;
-		var rUsr = uSR * d;
-		var cAR = 1 - (rAbs / 100);
-		var cUR = 1 - (rUsr / 100);
+		var stkRat = s * usrRat;
+		
+		// var rAbs = (100 / m) * d;
+		// var rUsr = uSR * d;
+		// var cAR = 1 - (rAbs / 100);
+		// var cUR = 1 - (rUsr / 100);
 		switch (options.unts)
 		{
 			// Units in percent (relative)
 			case 'relRd':
-				cPath.strokeWidth = (s * cAR * cUR) + ;
+				cPath.strokeWidth = stkRat;
 				break;
 			case 'absRd':
-				cPath.strokeWidth = s + (s * cAR + cUR);
+				cPath.strokeWidth = s + stkRat;
+				// cPath.strokeWidth = s + (s * cAR + cUR);
 				break;
 		}
 		s = cPath.strokeWidth;
