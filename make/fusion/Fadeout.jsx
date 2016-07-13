@@ -17,12 +17,12 @@ function getRadioValue(element)
 	}
 }
 
-function getCenter(p)
+function getCenter(path)
 {
 	var r =
 	{
-		px: p.left + (p.width / 2),
-		py: p.top - (p.height / 2)
+		px: path.left + (path.width / 2),
+		py: path.top - (path.height / 2)
 	}
 	return(r);
 }
@@ -36,15 +36,15 @@ function getDistance(p1, p2)
 	return(d);
 }
 
-function getOrigin(p)
+function getMetrics(paths)
 {
-	var minX = getCenter(p[0]).px;
-	var maxX = getCenter(p[0]).px;
-	var minY = getCenter(p[0]).py;
-	var maxY = getCenter(p[0]).py;
-	for(var i in p)
+	var minX = getCenter(paths[0]).px;
+	var maxX = getCenter(paths[0]).px;
+	var minY = getCenter(paths[0]).py;
+	var maxY = getCenter(paths[0]).py;
+	for(var i in paths)
 	{
-		var c = getCenter(p[i]);
+		var c = getCenter(paths[i]);
 		if (c.px < minX) {minX = c.px;}
 		if (c.px > maxX) {maxX = c.px;}
 		if (c.py < minY) {minY = c.py;}
@@ -53,9 +53,26 @@ function getOrigin(p)
 	r =
 	{
 		ox: (minX + maxX) / 2,
-		oy: (minY + maxY) / 2
+		oy: (minY + maxY) / 2,
+		sw: Math.abs(maxX - minX),
+		sh: Math.abs(maxY - minY)
 	}
 	return(r);
+}
+
+function getFurthest(paths, origin)
+{
+	var m = 0;
+	var p1 = {x: origin.ox, y: origin.oy};
+	for(var i in paths)
+	{
+		var cPath = paths[i];
+		var p = getCenter(cPath);
+		var p2 = {x: p.px, y: p.py};
+		var d = getDistance(p1, p2);
+		if (m < d) {m = d;}
+	}
+	return(m);
 }
 
 /*-----------------------------------------------
@@ -72,13 +89,13 @@ Thx. Hiroyuki :)
 :rtype:       Array
 :raises:      -
 -----------------------------------------------*/
-function getPaths(s, p)
+function getPaths(items, paths)
 {
-	for(var i = 0; i < s.length; i++)
+	for(var i = 0; i < items.length; i++)
 	{
-		if(s[i].typename == "PathItem" && !s[i].guides && !s[i].clipping) {p.push(s[i]);}
-		else if(s[i].typename == "GroupItem") {getPaths(s[i].pageItems, p);}
-		else if(s[i].typename == "CompoundPathItem") {getPaths(s[i].pathItems, p);}
+		if(items[i].typename == "PathItem" && !items[i].guides && !items[i].clipping) {paths.push(items[i]);}
+		else if(items[i].typename == "GroupItem") {getPaths(items[i].pageItems, paths);}
+		else if(items[i].typename == "CompoundPathItem") {getPaths(items[i].pathItems, paths);}
 	}
 }
 
@@ -88,24 +105,55 @@ Set path values
 Loop thru' all paths and its descendants and modify their values
 -------------------------------------------------
 :param        paths          Array:         Array of paths to be modified
-:param        options        Object:        Options object
 :param        origin         Object:        Origin coords
+:param        options        Object:        Options object
 -------------------------------------------------
 :return:      -
 :rtype:       -
 :raises:      -
 -----------------------------------------------*/
-function setPaths(paths, options, origin)
+function setPaths(paths, origin, options)
 {
-	var o = getOrigin(paths);
+	var o = getMetrics(paths);
+	var m = getFurthest(paths, origin);
+	// alert("Longest distance: " + m);
 	// alert("Origin:\n\n" + o.ox + ", " + o.oy);
+	var p1 = {x: o.ox, y: o.oy};
+	var mn = options.valsMin;
+	var mx = options.valsMax;
+	var uSR = (mx - mn) / m;
 	for(var i in paths)
 	{
 		var cPath = paths[i];
 		var p = getCenter(cPath);
-		var p1 = {x: p.px, y: p.py}
-		var p2 = {x: o.ox, y: o.oy}
+		var p2 = {x: p.px, y: p.py};
 		var d = getDistance(p1, p2);
+		var s = cPath.strokeWidth;
+		var rAbs = (100 / m) * d;
+		var rUsr = uSR * d;
+		var cAR = 1 - (rAbs / 100);
+		var cUR = 1 - (rUsr / 100);
+		switch (options.unts)
+		{
+			// Units in percent (relative)
+			case 'relRd':
+				cPath.strokeWidth = (s * cAR * cUR) + ;
+				break;
+			case 'absRd':
+				cPath.strokeWidth = s + (s * cAR + cUR);
+				break;
+		}
+		s = cPath.strokeWidth;
+		switch (options.trns)
+		{
+			case 'cubRd':
+				cPath.strokeWidth = Math.pow(s, 2);
+				break;
+			case 'logRd':
+				if (s > 0) {cPath.strokeWidth = Math.log(s);}
+				else {cPath.strokeWidth = 0;}
+				break;
+		}
 		// alert("Distance: " + d);
 	}
 }
@@ -123,8 +171,8 @@ var FadeoutOptions =
 				alignment:          'fill',\
 				alignChildren:      'left',\
 				text:               'Unit',\
-				relRd:              RadioButton         {text: 'Relative (%)'},\
-				absRd:              RadioButton         {text: 'Absolute (px)', value: true}\
+				relRd:              RadioButton         {text: 'Relative (%)', value: true},\
+				absRd:              RadioButton         {text: 'Absolute (px)'}\
 			},\
 			trnsPn: Panel\
 			{\
@@ -146,13 +194,13 @@ var FadeoutOptions =
 				{\
 					orientation:    'row',\
 					label:          StaticText          {text:'Minimum:'},\
-					vmnTx:          EditText            {text:'10', characters: 2}\
+					vmnTx:          EditText            {text:'0', characters: 4}\
 				},\
 				vmxGr:               Group\
 				{\
 					orientation:    'row',\
 					label:          StaticText          {text:'Maximum:'},\
-					vmxTx:          EditText            {text:'10', characters: 2}\
+					vmxTx:          EditText            {text:'100', characters: 4}\
 				}\
 			},\
 			buttons: Group\
@@ -212,7 +260,7 @@ function main()
 		// Get exact pathes (even inside groups)
 		getPaths(selections, paths);
 		// Set path values
-		setPaths(paths, FadeoutOptions.panelOptions, getOrigin(paths));
+		setPaths(paths, getMetrics(paths), FadeoutOptions.panelOptions);
 	}
 }
 
